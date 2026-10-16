@@ -26,7 +26,7 @@ export class CourseController {
   }
 
   @Patch(':id')
-  patchCourse(@Param('id') id: string): string {
+  patchCourse(@Param('id') id: string) {
     return this.courseService.patchCourse(id);
   }
 
