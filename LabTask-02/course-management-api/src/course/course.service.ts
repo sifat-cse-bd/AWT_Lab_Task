@@ -2,57 +2,56 @@ import { Injectable } from '@nestjs/common';
 import { CreateCourseDto } from './dto/create-course.dto.js';
 import { UpdateCourseDto } from './dto/update-course.dto.js';
 import { Express } from 'express';
-import Multer from 'multer';
 
 @Injectable()
 export class CourseService {
   getAllCourses(): object {
     return {
-      message: "All Caourses fetched successfully.",
-      data: []
+      message: 'All courses fetched successfully',
+      data: [],
     };
   }
 
   getCourseById(id: string): object {
     return {
-      message: `"Course fetched successfully`,
-      id: id
+      message: 'Course fetched successfully',
+      id,
     };
   }
 
   createCourse(dto: CreateCourseDto): object {
     return {
-      message: `"Course created successfully`,
-      data: dto
-    }
+      message: 'Course created successfully',
+      data: dto,
+    };
   }
 
   updateCourse(id: string, dto: UpdateCourseDto): object {
     return {
-      message: `"Course updated successfully`,
-      id: id,
-      data: dto
-    }
+      message: 'Course updated successfully',
+      id,
+      data: dto,
+    };
   }
 
   patchCourse(id: string, dto: UpdateCourseDto): object {
-    return{
-      message: `Course patched successfully`,
-      id: id,
-      updateFields: Object.keys(dto)
+    return {
+      message: 'Course patched successfully',
+      id,
+      updatedFields: Object.keys(dto),
     };
   }
 
   deleteCourse(id: string): object {
-    return { message: `"Course deleted successfully", id: ${id}` };
+    return { message: 'Course deleted successfully', id };
   }
 
-  uploadCourseMetarials(id:string, file: Express.Multer.File): object {
-    return{
-      message: `"Course Metarials uploaded successfully"`,
+  uploadCourseMaterial(id: string, file: Express.Multer.File): object {
+    return {
+      message: 'Material uploaded successfully',
       courseId: id,
       filename: file.filename,
-      path: file.path
-    }
+      path: file.path,
+    };
   }
 }
