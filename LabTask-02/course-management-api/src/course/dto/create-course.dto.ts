@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString, Matches } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateCourseDto{
@@ -8,8 +8,8 @@ export class CreateCourseDto{
 
     @IsString()
     @IsNotEmpty({message: 'Please enter course code'})
-    @Matches(/^[A-Z]{2,3}[1-9]{3}$/, {
-        message: 'Please enter valide course code e.g CS101'
+    @Matches(/^[A-Z]{2,3}[0-9]{3}$/, {
+        message: 'Please enter valid course code e.g CS101'
     })
     code: string;
     @IsString()
@@ -17,11 +17,14 @@ export class CreateCourseDto{
     instructor: string;
 
     @Type(() => Number)
-    @IsNotEmpty({message: 'Please enter credit'})
-    @Matches(/^[1-6]{1}$/, {message: 'Please enter valid credit e.g. 3'})
-    credit: number;
+    @IsNotEmpty({message: 'Please enter credits'})
+    @IsNumber({}, { message: 'Credits must be a number' })
+    @Min(1, { message: 'Credits must be at least 1' })
+    @Max(6, { message: 'Credits must be at most 6' })
+    credits: number;
 
     
     @IsString()
-    description: string;
+    @IsOptional()
+    description?: string;
 }
