@@ -5,16 +5,16 @@ import { CourseService } from '../course/course.service.js';
 export class EnrollmentService {
     constructor(private courseService: CourseService) {}
 
-    async enrollStudent(studentName: string, courseId: string) 
-    {
-        const course = await this.courseService.getCourseById(courseId);
+    enrollStudent(studentName: string, courseId: string) {
+        const course = this.courseService.getCourseById(courseId);
         return {
             message: 'Student enrolled successfully',
-            data: { studentName, course }
-        }
+            student: studentName,
+            course,
+        };
     }
 
     getEnrollments() {
-        return{ message: 'All enrollments fetched', data: [] }
+        return { message: 'All enrollments fetched', data: [] };
     }
 }
