@@ -23,6 +23,25 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
+  it('/enrollment (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/enrollment')
+      .expect(200)
+      .expect({ message: 'All enrollments fetched', data: [] });
+  });
+
+  it('/enrollment (POST)', () => {
+    return request(app.getHttpServer())
+      .post('/enrollment')
+      .send({ studentName: 'John Doe', courseId: '101' })
+      .expect(201)
+      .expect({
+        message: 'Student enrolled successfully',
+        student: 'John Doe',
+        course: { message: 'Course fetched', id: '101' },
+      });
+  });
+
   afterEach(async () => {
     await app.close();
   });
