@@ -1,12 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Products } from './entities/products.entity.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { PartialUpdateProductDto } from './dto/partial-update-product.dto.js';
 import { NotFoundException } from '@nestjs/common';
-import { contains } from 'class-validator';
 
 @Injectable()
 export class ProductsService {
@@ -36,8 +35,8 @@ export class ProductsService {
     }
 
     //find a product by id, throw 404 if not found
-    findOne(id: number) {
-        const product = this.productsRepo.findOne({ where: { id } });
+    async findOne(id: number) {
+        const product = await this.productsRepo.findOne({ where: { id } });
         if (!product) {
             throw new NotFoundException(`Product with id ${id} not found`);
         }
@@ -65,7 +64,13 @@ export class ProductsService {
     //replace full product by id
     async replace(id: number, dto: UpdateProductDto) {
         await this.findOne(id); // Check if exists, throws 404 if not
-        const product = this.productsRepo.create({ id, ...dto });
+        const product = this.productsRepo.create({
+            id,
+            ...dto,
+            description: dto.description ?? (null as any), // not sent = reset
+            stock: dto.stock ?? 0,
+            isActive: dto.isActive ?? true,
+        });
         const updatedProduct = await this.productsRepo.save(product);
         return {
             message: 'Product replaced successfully',
@@ -75,7 +80,7 @@ export class ProductsService {
 
     //delete a product by id
     async remove(id: number) {
-        const result = await this.findOne({where: id});
+        const result = await this.findOne(id);
         if (!result) {
             throw new NotFoundException(`Product with id ${id} not found`);
         }
@@ -96,23 +101,20 @@ export class ProductsService {
 
     //find products by category
     async findByCategory(category: string) {
-        const products = this.productsRepo.find({ where: { category } });
-        const quantity = this.productsRepo.count();
+        const [products, count] = await this.productsRepo.findAndCount({ where: { category } });
         return {
             message: 'Products found successfully',
-            count: quantity,
+            count: count,
             data: products,
         };
     }
 
     //search products by name
-    //find products by category
-    async search(keyword: string) {
-        const products = this.productsRepo.find({ where: { name: contains(keyword) } });
-        const quantity = this.productsRepo.count();
+    async search(keyword: string): Promise<{ message: string; count: number; data: Products[] }> {
+        const [products, count] = await this.productsRepo.findAndCount({ where: { name: ILike(`%${keyword ?? ''}%`) } });
         return {
             message: 'Products found successfully',
-            count: quantity,
+            count: count,
             data: products,
         };
     }
@@ -127,8 +129,7 @@ export class ProductsService {
         product.isActive = !product.isActive;
         return {
             message: 'Product active status toggled successfully',
-            data: this.productsRepo.save(product),
+            data: await this.productsRepo.save(product),
         };
     }
 }
-
