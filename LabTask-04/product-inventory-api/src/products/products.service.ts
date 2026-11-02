@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ILike, Repository } from 'typeorm';
 import { Products } from './entities/products.entity.js';
 import { CreateProductDto } from './dto/create-product.dto.js';
 import { UpdateProductDto } from './dto/update-product.dto.js';
 import { PartialUpdateProductDto } from './dto/partial-update-product.dto.js';
-import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
 export class ProductsService {
@@ -27,10 +26,22 @@ export class ProductsService {
     //return all products ordered by createdAt DESC
     async findAll() {
         const [products, count] = await this.productsRepo.findAndCount({ order: { createdAt: 'DESC' } });
+        const organizedProducs = products.map(p => ({
+           id: p.id,
+           name: p.name,
+           description: p.description,
+           price: p.price,
+           stock: p.stock,
+           category: p.category,
+           isActive: p.isActive,
+           createdDate: p.createdAt,
+           updatedDate: p.updatedAt,
+        }
+        ));
         return {
             message: 'Products found successfully',
             count: count,
-            data: products,
+            data: organizedProducs,
         };
     }
 
@@ -102,6 +113,10 @@ export class ProductsService {
     //find products by category
     async findByCategory(category: string) {
         const [products, count] = await this.productsRepo.findAndCount({ where: { category } });
+        if(count === 0)
+        {
+             return { message: `No product found by the category: ${category}` };
+        }
         return {
             message: 'Products found successfully',
             count: count,
@@ -110,10 +125,17 @@ export class ProductsService {
     }
 
     //search products by name
-    async search(keyword: string): Promise<{ message: string; count: number; data: Products[] }> {
-        const [products, count] = await this.productsRepo.findAndCount({ where: { name: ILike(`%${keyword ?? ''}%`) } });
+    async search(keyword: string | undefined) {
+        const normalizedKeyword = keyword?.trim();
+        if (!normalizedKeyword) {
+            throw new BadRequestException('Search keyword must not be empty');
+        }
+
+        const [products, count] = await this.productsRepo.findAndCount({ where: { name: ILike(`%${normalizedKeyword}%`) } });
         return {
-            message: 'Products found successfully',
+            message: count === 0
+                ? `No products found for keyword: ${normalizedKeyword}`
+                : 'Products found successfully',
             count: count,
             data: products,
         };
